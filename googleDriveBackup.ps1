@@ -1,6 +1,7 @@
 $sourcePath = "C:\Users\benedikt.schmidt\Google Drive"
 $destinationPath = "U:\Backup\Google Drive"
 $maximumAgeOfBackupInDays = 180
+$stagingDirectory = "C:\temp\googleDriveBackup"
 
 Write-Host "creating backup of $sourcePath"
 $dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
@@ -8,8 +9,13 @@ $targetFileName = $destinationPath + "\" + $dateTime + ".zip"
 Write-Host "target file is $targetFileName"
 
 Write-Host "creating new backup"
+if (Test-Path $stagingDirectory)
+{
+    Remove-Item -Path $stagingDirectory -Force -Recurse
+}
+Copy-Item -Path $sourcePath -Destination $stagingDirectory -Recurse
 Add-Type -assembly "system.io.compression.filesystem"
-[io.compression.zipfile]::CreateFromDirectory($sourcePath, $targetFileName)
+[io.compression.zipfile]::CreateFromDirectory($stagingDirectory, $targetFileName)
 
 Write-Host "checking old backups"
 $allBackups = Get-ChildItem $destinationPath
