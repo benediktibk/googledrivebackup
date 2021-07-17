@@ -1,7 +1,36 @@
-$sourcePath = "C:\Users\benedikt.schmidt\Google Drive"
-$destinationPath = "U:\Backup\Google Drive"
-$maximumAgeOfBackupInDays = 180
-$stagingDirectory = "C:\temp\googleDriveBackup"
+Function Parse-IniFile ($file) {
+    $ini = @{}
+
+    # Create a default section if none exist in the file. Like a java prop file.
+    $section = "NO_SECTION"
+    $ini[$section] = @{}
+
+    switch -regex -file $file 
+    {
+        "^\[(.+)\]$" 
+        {
+            $section = $matches[1].Trim()
+            $ini[$section] = @{}
+        }
+        "^\s*([^#].+?)\s*=\s*(.*)" 
+        {
+            $name,$value = $matches[1..2]
+            # skip comments that start with semicolon:
+            if (!($name.StartsWith(";")))
+            {
+                $ini[$section][$name] = $value.Trim()
+            }
+        }
+    }
+    $ini
+}
+
+$config = Parse-IniFile("settings.ini")
+
+$sourcePath = $config["General"]["SourcePath"]
+$destinationPath = $config["General"]["DestinationPath"]
+$maximumAgeOfBackupInDays = $config["General"]["MaximumAgeOfBackupsInDays"]
+$stagingDirectory = $config["General"]["StagingDirectory"]
 
 Write-Host "creating backup of $sourcePath"
 $dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
